@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Issue Reporter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .confidence-bar {
+            height: 4px;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        .poster-container {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border: 4px solid #c44569;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .poster-photo {
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        @media print {
+            body * { visibility: hidden; }
+            .poster-container, .poster-container * { visibility: visible; }
+            .poster-container { position: absolute; top: 0; left: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-blue-600">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">🏛️</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">Civic Issue Reporter</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <button id="citizenBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        Citizen Portal
+                    </button>
+                    <button id="govBtn" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        Government Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Missing Person Modal -->
+    <div id="missingPersonModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="bg-red-600 text-white p-6 rounded-t-xl">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">🚨</span>
+                    <div>
+                        <h2 class="text-2xl font-bold">Missing Person Report</h2>
+                        <p class="text-red-100">Please provide detailed information to help locate the missing person</p>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="missingPersonForm" class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Missing Person's Name *</label>
+                        <input type="text" id="missingName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Age *</label>
+                        <input type="number" id="missingAge" required min="1" max="120" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gender *</label>
+                        <select id="missingGender" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Height (approx.)</label>
+                        <input type="text" id="missingHeight" placeholder="e.g., 5'6&quot; or 170cm" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Last Seen Location *</label>
+                    <input type="text" id="lastSeenLocation" required placeholder="Exact location where the person was last seen" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Last Seen Date *</label>
+                        <input type="date" id="lastSeenDate" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Last Seen Time</label>
+                        <input type="time" id="lastSeenTime" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Physical Description *</label>
+                    <textarea id="physicalDescription" required rows="3" placeholder="Hair color, clothing worn, distinctive features, etc." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contact Person *</label>
+                    <input type="text" id="contactPerson" required placeholder="Your name (person reporting)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number *</label>
+                    <input type="tel" id="contactNumber" required placeholder="Phone number for contact" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload Photo</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-red-400 transition-colors">
+                        <input type="file" id="missingPersonPhoto" accept="image/*" class="hidden">
+                        <div id="photoUploadArea" class="cursor-pointer" onclick="document.getElementById('missingPersonPhoto').click()">
+                            <div class="text-4xl text-gray-400 mb-2">📷</div>
+                            <p class="text-gray-600 font-medium">Click to upload photo</p>
+                            <p class="text-gray-500 text-sm">JPG, PNG, GIF up to 10MB</p>
+                        </div>
+                        <div id="photoPreview" class="hidden">
+                            <img id="previewImage" class="w-32 h-32 object-cover rounded-lg mx-auto mb-2 border-2 border-white shadow-lg">
+                            <p class="text-green-600 font-medium mb-2">✅ Photo uploaded successfully</p>
+                            <button type="button" id="removePhoto" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm">
+                                Remove Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Additional Information</label>
+                    <textarea id="additionalInfo" rows="3" placeholder="Any other relevant information that might help..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"></textarea>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="button" id="cancelMissingReport" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                        Create Missing Person Report & Poster
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Missing Person Poster -->
+    <div id="missingPersonPoster" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Missing Person Poster Created</h3>
+                    <button id="closePosterModal" class="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <span class="text-2xl font-bold">×</span>
+                    </button>
+                </div>
+                
+                <div id="posterContent" class="poster-container rounded-lg p-6 text-white text-center mb-6">
+                    <!-- Poster content will be generated here -->
+                </div>
+                
+                <div class="flex space-x-3 mb-4">
+                    <button id="downloadPoster" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                        📥 Download Poster
+                    </button>
+                    <button id="printPoster" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        🖨️ Print Poster
+                    </button>
+                    <button id="sharePoster" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                        📱 Share
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <button id="closePosterModalBottom" class="w-full px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                        ✅ Done - Close Poster
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Citizen Portal -->
+    <div id="citizenPortal" class="container mx-auto px-6 py-8">
+        <div class="max-w-2xl mx-auto space-y-6">
+            <!-- Status Checker -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-green-800 mb-4 flex items-center">
+                    <span class="mr-2">🔍</span>
+                    CHECK STATUS FOR A COMPLAINT
+                </h3>
+                <div class="flex space-x-3">
+                    <input type="text" id="statusCheckId" placeholder="Enter your complaint ID (e.g., CMP1234567890)" class="flex-1 px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <button id="checkStatusBtn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        Check Status
+                    </button>
+                </div>
+                
+                <div id="statusResult" class="hidden mt-4 p-4 bg-white border border-green-200 rounded-lg">
+                    <!-- Status result will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Report Form -->
+            <div class="bg-white rounded-xl shadow-xl p-8 fade-in">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Report a Civic Issue</h2>
+                
+                <form id="complaintForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                        <input type="text" id="citizenName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
+                        <input type="tel" id="citizenPhone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                        <input type="text" id="issueLocation" required placeholder="Enter the location of the issue (e.g., Street name, Area, Landmark)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Describe the Issue</label>
+                        <textarea id="issueDescription" required rows="4" placeholder="Describe your complaint in detail..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                    </div>
+
+                    <div id="missingPersonAlert" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="text-red-600">🚨</span>
+                            <span class="font-medium text-red-800">Missing Person Detected!</span>
+                        </div>
+                        <p class="text-red-700 text-sm mb-3">It appears you're reporting a missing person. We can help you create a detailed missing person report and poster to aid in the search.</p>
+                        <button type="button" id="createMissingReport" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm">
+                            Create Missing Person Report
+                        </button>
+                    </div>
+
+                    <div id="detectedCategory" class="hidden">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">🤖</span>
+                                    <span class="font-medium text-blue-800">AI Detection:</span>
+                                    <span id="categoryName" class="font-bold text-blue-900"></span>
+                                </div>
+                                </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg">
+                        Submit Complaint
+                    </button>
+                </form>
+
+                <div id="successMessage" class="hidden mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-green-600">✅</span>
+                        <span class="font-medium text-green-800">Complaint submitted successfully!</span>
+                    </div>
+                    <div class="mt-3 flex items-center space-x-3">
+                        <p class="text-green-700">Complaint ID: <span id="complaintId" class="font-mono font-bold"></span></p>
+                        <button id="copyIdBtn" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                            📋 Copy ID
+                        </button>
+                    </div>
+                    <p class="text-green-600 text-sm mt-2">💡 Save this ID to check your complaint status later!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white text-2xl">🔐</span>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Government Login</h2>
+                <p class="text-gray-600 mt-2">Enter your credentials to access the dashboard</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="username" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Enter your username">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Enter your password">
+                </div>
+                
+                <div id="loginError" class="hidden bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div class="flex items-center space-x-2 text-red-600">
+                        <span>❌</span>
+                        <span class="font-medium">Invalid credentials. Please try again.</span>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p class="text-sm text-blue-800 font-medium">Demo Credentials:</p>
+                    <p class="text-xs text-blue-600 mt-1">Username: <span class="font-mono">admin</span> | Password: <span class="font-mono">gov123</span></p>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" id="cancelLogin" class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        Login
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Government Dashboard -->
+    <div id="govDashboard" class="hidden container mx-auto px-6 py-8">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Government Dashboard</h2>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Total Complaints</p>
+                        <p id="totalComplaints" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">📊</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Municipal</p>
+                        <p id="municipalCount" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🏗️</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Public Works</p>
+                        <p id="publicWorksCount" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🛠️</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Health & Safety</p>
+                        <p id="healthCount" class="text-2xl font-bold text-red-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🏥</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Transportation</p>
+                        <p id="transportationCount" class="text-2xl font-bold text-indigo-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🚌</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Environment</p>
+                        <p id="environmentCount" class="text-2xl font-bold text-purple-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🌱</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Utilities</p>
+                        <p id="utilitiesCount" class="text-2xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">⚡</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Education</p>
+                        <p id="educationCount" class="text-2xl font-bold text-teal-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🎓</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Housing</p>
+                        <p id="housingCount" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🏠</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Social Services</p>
+                        <p id="socialCount" class="text-2xl font-bold text-pink-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🤝</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-600">Missing Persons</p>
+                        <p id="missingPersonCount" class="text-2xl font-bold text-red-600">0</p>
+                    </div>
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🚨</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Department Tabs -->
+        <div class="bg-white rounded-xl shadow-lg">
+            <div class="border-b border-gray-200">
+                <nav class="flex flex-wrap gap-x-6 gap-y-2 px-6">
+                    <button class="dept-tab py-3 px-3 border-b-2 border-blue-500 font-medium text-blue-600 text-sm" data-dept="all">
+                        All Complaints
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Municipal">
+                        Municipal
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Public Works">
+                        Public Works
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Health & Safety">
+                        Health & Safety
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Transportation">
+                        Transportation
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Environment">
+                        Environment
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Utilities">
+                        Utilities
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Education">
+                        Education
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Housing">
+                        Housing
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Social Services">
+                        Social Services
+                    </button>
+                    <button class="dept-tab py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 text-sm" data-dept="Missing Person">
+                        Missing Persons
+                    </button>
+                </nav>
+            </div>
+
+            <div class="p-6">
+                <div id="complaintsContainer">
+                    <div class="text-center py-12 text-gray-500">
+                        <span class="text-4xl mb-4 block">📋</span>
+                        <p class="text-lg">No complaints registered yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Missing person detection patterns
+        const missingPersonPatterns = {
+            relations: ['son', 'daughter', 'child', 'father', 'mother', 'brother', 'sister', 'husband', 'wife', 'grandfather', 'grandmother', 'uncle', 'aunt', 'cousin', 'nephew', 'niece', 'friend', 'relative', 'family', 'parent', 'sibling'],
+            missingKeywords: ['missing', 'lost', 'disappeared', 'vanished', 'gone', 'kidnapped', 'abducted', 'not found', 'cant find', "can't find", 'nowhere to be found']
+        };
+
+        // Advanced AI-powered department detection system
+        const departmentPatterns = {
+            'Municipal': {
+                keywords: ['drainage', 'sewer', 'water', 'garbage', 'waste', 'sanitation', 'cleaning', 'dump', 'trash', 'bin', 'toilet', 'bathroom', 'park', 'garden', 'municipal', 'corporation'],
+                contexts: ['water supply', 'waste management', 'public toilets', 'park maintenance', 'street cleaning', 'garbage collection', 'sewage system'],
+                phrases: ['water not coming', 'garbage not collected', 'toilet not working', 'park is dirty', 'drain blocked', 'sewage overflow', 'waste disposal'],
+                semanticGroups: ['sanitation', 'cleanliness', 'public facilities', 'waste management']
+            },
+            'Public Works': {
+                keywords: ['road', 'street', 'pothole', 'construction', 'building', 'infrastructure', 'bridge', 'sidewalk', 'pavement', 'repair', 'maintenance'],
+                contexts: ['road construction', 'infrastructure development', 'building permits', 'street repairs', 'public construction'],
+                phrases: ['road is damaged', 'pothole on street', 'bridge needs repair', 'construction noise', 'sidewalk broken', 'street light not working'],
+                semanticGroups: ['infrastructure', 'construction', 'public works', 'maintenance']
+            },
+            'Health & Safety': {
+                keywords: ['hospital', 'clinic', 'medical', 'health', 'safety', 'fire', 'emergency', 'ambulance', 'police', 'crime', 'accident', 'injury'],
+                contexts: ['medical emergency', 'fire safety', 'crime prevention', 'accident response', 'health services', 'public safety'],
+                phrases: ['need ambulance', 'fire hazard', 'unsafe conditions', 'medical help', 'crime in area', 'accident happened', 'emergency situation'],
+                semanticGroups: ['emergency', 'safety', 'medical', 'security']
+            },
+            'Transportation': {
+                keywords: ['traffic', 'bus', 'transport', 'signal', 'parking', 'vehicle', 'metro', 'train', 'auto', 'rickshaw', 'taxi'],
+                contexts: ['public transport', 'traffic management', 'parking issues', 'vehicle problems', 'transportation services'],
+                phrases: ['bus not coming', 'traffic jam', 'no parking space', 'signal not working', 'auto refused', 'transport problem'],
+                semanticGroups: ['mobility', 'public transport', 'traffic', 'vehicles']
+            },
+            'Utilities': {
+                keywords: ['electricity', 'power', 'light', 'gas', 'internet', 'phone', 'cable', 'utility', 'outage', 'connection'],
+                contexts: ['power supply', 'internet connectivity', 'gas supply', 'utility services', 'electrical issues'],
+                phrases: ['no electricity', 'power cut', 'internet down', 'gas not coming', 'phone line dead', 'utility problem'],
+                semanticGroups: ['power', 'connectivity', 'utilities', 'services']
+            },
+            'Environment': {
+                keywords: ['pollution', 'noise', 'air', 'environment', 'tree', 'cutting', 'smoke', 'dust', 'chemical', 'green'],
+                contexts: ['air pollution', 'noise pollution', 'environmental protection', 'tree preservation', 'green spaces'],
+                phrases: ['too much noise', 'air is polluted', 'trees being cut', 'factory smoke', 'chemical smell', 'environmental damage'],
+                semanticGroups: ['pollution', 'environment', 'ecology', 'green spaces']
+            },
+            'Education': {
+                keywords: ['school', 'college', 'university', 'teacher', 'student', 'education', 'classroom', 'library', 'playground', 'exam', 'admission', 'fees'],
+                contexts: ['school infrastructure', 'educational services', 'teacher shortage', 'student facilities', 'academic issues'],
+                phrases: ['school building damaged', 'no teachers', 'library closed', 'playground unsafe', 'admission problem', 'fees issue'],
+                semanticGroups: ['academics', 'learning', 'educational infrastructure', 'student services']
+            },
+            'Housing': {
+                keywords: ['house', 'apartment', 'rent', 'lease', 'property', 'building', 'housing', 'accommodation', 'tenant', 'landlord', 'maintenance'],
+                contexts: ['housing shortage', 'rental issues', 'property maintenance', 'housing schemes', 'accommodation problems'],
+                phrases: ['house not maintained', 'rent too high', 'no housing available', 'building unsafe', 'landlord issue', 'property dispute'],
+                semanticGroups: ['residential', 'accommodation', 'property management', 'housing rights']
+            },
+            'Social Services': {
+                keywords: ['welfare', 'pension', 'benefits', 'social', 'elderly', 'disabled', 'support', 'assistance', 'community', 'charity', 'help'],
+                contexts: ['social welfare', 'community support', 'disability services', 'elderly care', 'financial assistance'],
+                phrases: ['pension not received', 'need social help', 'disability support', 'elderly care', 'welfare scheme', 'community issue'],
+                semanticGroups: ['welfare', 'community support', 'social assistance', 'public benefits']
+            }
+        };
+
+        let complaints = JSON.parse(localStorage.getItem('civicComplaints')) || [];
+        let currentFilter = 'all';
+
+        // Function to detect missing person reports
+        function detectMissingPerson(description) {
+            const text = description.toLowerCase().trim();
+            
+            let hasRelation = false;
+            let hasMissingKeyword = false;
+            
+            // Check for family relations
+            missingPersonPatterns.relations.forEach(relation => {
+                if (text.includes(relation)) {
+                    hasRelation = true;
+                }
+            });
+            
+            // Check for missing keywords
+            missingPersonPatterns.missingKeywords.forEach(keyword => {
+                if (text.includes(keyword)) {
+                    hasMissingKeyword = true;
+                }
+            });
+            
+            return hasRelation && hasMissingKeyword;
+        }
+
+        // Advanced AI-like detection algorithm with scoring
+        function smartDetectDepartment(description) {
+            const text = description.toLowerCase().trim();
+            
+            if (text.length < 5) return { department: 'General', confidence: 0, reasoning: 'Description too short' };
+            
+            // Check for missing person first
+            if (detectMissingPerson(description)) {
+                return { department: 'Missing Person', confidence: 95, reasoning: 'Missing person report detected' };
+            }
+            
+            const scores = {};
+            const reasoningDetails = {};
+            
+            // Initialize scores
+            Object.keys(departmentPatterns).forEach(dept => {
+                scores[dept] = 0;
+                reasoningDetails[dept] = [];
+            });
+            
+            // Score based on exact keywords (weight: 3)
+            Object.entries(departmentPatterns).forEach(([dept, patterns]) => {
+                patterns.keywords.forEach(keyword => {
+                    if (text.includes(keyword)) {
+                        scores[dept] += 3;
+                        reasoningDetails[dept].push(`Found keyword: "${keyword}"`);
+                    }
+                });
+            });
+            
+            // Score based on context phrases (weight: 5)
+            Object.entries(departmentPatterns).forEach(([dept, patterns]) => {
+                patterns.contexts.forEach(context => {
+                    if (text.includes(context)) {
+                        scores[dept] += 5;
+                        reasoningDetails[dept].push(`Context match: "${context}"`);
+                    }
+                });
+            });
+            
+            // Score based on common phrases (weight: 7)
+            Object.entries(departmentPatterns).forEach(([dept, patterns]) => {
+                patterns.phrases.forEach(phrase => {
+                    if (text.includes(phrase)) {
+                        scores[dept] += 7;
+                        reasoningDetails[dept].push(`Phrase match: "${phrase}"`);
+                    }
+                });
+            });
+            
+            // Advanced semantic analysis (weight: 4)
+            Object.entries(departmentPatterns).forEach(([dept, patterns]) => {
+                const semanticScore = analyzeSemanticPatterns(text, patterns.keywords);
+                scores[dept] += semanticScore;
+                if (semanticScore > 0) {
+                    reasoningDetails[dept].push(`Semantic analysis: +${semanticScore} points`);
+                }
+            });
+            
+            // Find department with highest score
+            const maxScore = Math.max(...Object.values(scores));
+            
+            if (maxScore === 0) {
+                return { department: 'General', confidence: 0, reasoning: 'No matching patterns found' };
+            }
+            
+            const detectedDept = Object.keys(scores).find(dept => scores[dept] === maxScore);
+            const confidence = Math.min(100, (maxScore / 20) * 100); // Normalize to percentage
+            
+            return {
+                department: detectedDept || 'General',
+                confidence: Math.round(confidence),
+                reasoning: reasoningDetails[detectedDept].slice(0, 2).join(', ') || 'Pattern matching'
+            };
+        }
+        
+        // Semantic pattern analysis for better context understanding
+        function analyzeSemanticPatterns(text, keywords) {
+            let score = 0;
+            const words = text.split(/\s+/);
+            
+            keywords.forEach(keyword => {
+                words.forEach(textWord => {
+                    // Exact match
+                    if (textWord === keyword) {
+                        score += 4;
+                    }
+                    // Partial match (for variations like "roads" vs "road")
+                    else if (textWord.includes(keyword) || keyword.includes(textWord)) {
+                        if (Math.abs(textWord.length - keyword.length) <= 2) {
+                            score += 2;
+                        }
+                    }
+                    // Fuzzy matching for similar words
+                    else if (calculateSimilarity(textWord, keyword) > 0.7) {
+                        score += 1;
+                    }
+                });
+            });
+            
+            return score;
+        }
+        
+        // Simple string similarity calculation
+        function calculateSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1.0;
+            
+            const editDistance = levenshteinDistance(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+        
+        // Levenshtein distance calculation
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+
+        function detectCategory(description) {
+            const result = smartDetectDepartment(description);
+            return result.department;
+        }
+
+        // Navigation
+        document.getElementById('citizenBtn').addEventListener('click', () => {
+            document.getElementById('citizenPortal').classList.remove('hidden');
+            document.getElementById('govDashboard').classList.add('hidden');
+        });
+
+        document.getElementById('govBtn').addEventListener('click', () => {
+            showLoginModal();
+        });
+
+        // Enhanced auto-categorization with missing person detection
+        document.getElementById('issueDescription').addEventListener('input', function() {
+            const description = this.value;
+            
+            if (description.length > 10) {
+                // Check for missing person first
+                if (detectMissingPerson(description)) {
+                    document.getElementById('missingPersonAlert').classList.remove('hidden');
+                    document.getElementById('detectedCategory').classList.add('hidden');
+                } else {
+                    document.getElementById('missingPersonAlert').classList.add('hidden');
+                    
+                    const result = smartDetectDepartment(description);
+                    
+                    if (result.department !== 'General') {
+                        document.getElementById('detectedCategory').classList.remove('hidden');
+                        document.getElementById('categoryName').textContent = result.department;
+                    } else {
+                        document.getElementById('detectedCategory').classList.add('hidden');
+                    }
+                }
+            } else {
+                document.getElementById('missingPersonAlert').classList.add('hidden');
+                document.getElementById('detectedCategory').classList.add('hidden');
+            }
+        });
+
+        // Missing person report button
+        document.getElementById('createMissingReport').addEventListener('click', function() {
+            document.getElementById('missingPersonModal').classList.remove('hidden');
+            // Set today's date as default
+            document.getElementById('lastSeenDate').value = new Date().toISOString().split('T')[0];
+        });
+
+        // Cancel missing person report
+        document.getElementById('cancelMissingReport').addEventListener('click', function() {
+            document.getElementById('missingPersonModal').classList.add('hidden');
+            document.getElementById('missingPersonForm').reset();
+            
+            // Reset photo upload
+            uploadedPhotoData = null;
+            document.getElementById('photoUploadArea').classList.remove('hidden');
+            document.getElementById('photoPreview').classList.add('hidden');
+        });
+
+        // Photo upload handling
+        let uploadedPhotoData = null;
+        
+        document.getElementById('missingPersonPhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Check file size (10MB limit)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size must be less than 10MB');
+                    return;
+                }
+                
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedPhotoData = e.target.result;
+                    document.getElementById('previewImage').src = uploadedPhotoData;
+                    document.getElementById('photoUploadArea').classList.add('hidden');
+                    document.getElementById('photoPreview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Remove photo functionality
+        document.getElementById('removePhoto').addEventListener('click', function() {
+            uploadedPhotoData = null;
+            document.getElementById('missingPersonPhoto').value = '';
+            document.getElementById('photoUploadArea').classList.remove('hidden');
+            document.getElementById('photoPreview').classList.add('hidden');
+        });
+
+        // Missing person form submission
+        document.getElementById('missingPersonForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const missingPersonData = {
+                name: document.getElementById('missingName').value,
+                age: document.getElementById('missingAge').value,
+                gender: document.getElementById('missingGender').value,
+                height: document.getElementById('missingHeight').value,
+                lastSeenLocation: document.getElementById('lastSeenLocation').value,
+                lastSeenDate: document.getElementById('lastSeenDate').value,
+                lastSeenTime: document.getElementById('lastSeenTime').value,
+                physicalDescription: document.getElementById('physicalDescription').value,
+                contactPerson: document.getElementById('contactPerson').value,
+                contactNumber: document.getElementById('contactNumber').value,
+                additionalInfo: document.getElementById('additionalInfo').value,
+                photo: uploadedPhotoData
+            };
+            
+            // Generate poster HTML for storage
+            const posterHTML = generatePosterHTML(missingPersonData, 'CMP' + Date.now());
+            
+            // Create complaint entry
+            const complaint = {
+                id: 'CMP' + Date.now(),
+                name: missingPersonData.contactPerson,
+                phone: missingPersonData.contactNumber,
+                location: missingPersonData.lastSeenLocation,
+                description: `Missing Person Report: ${missingPersonData.name}, ${missingPersonData.age} years old, ${missingPersonData.gender}. Last seen at ${missingPersonData.lastSeenLocation} on ${missingPersonData.lastSeenDate}. ${missingPersonData.physicalDescription}`,
+                category: 'Missing Person',
+                confidence: 100,
+                aiReasoning: 'Missing person report',
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                status: 'Urgent',
+                missingPersonData: missingPersonData,
+                posterHTML: posterHTML
+            };
+            
+            complaints.push(complaint);
+            localStorage.setItem('civicComplaints', JSON.stringify(complaints));
+            
+            // Generate poster
+            generateMissingPersonPoster(missingPersonData, complaint.id);
+            
+            // Hide missing person modal
+            document.getElementById('missingPersonModal').classList.add('hidden');
+            
+            // Show success message
+            document.getElementById('complaintId').textContent = complaint.id;
+            document.getElementById('successMessage').classList.remove('hidden');
+            
+            // Reset forms and photo upload
+            document.getElementById('missingPersonForm').reset();
+            document.getElementById('complaintForm').reset();
+            document.getElementById('missingPersonAlert').classList.add('hidden');
+            
+            // Reset photo upload
+            uploadedPhotoData = null;
+            document.getElementById('photoUploadArea').classList.remove('hidden');
+            document.getElementById('photoPreview').classList.add('hidden');
+        });
+
+        // Generate poster HTML for storage
+        function generatePosterHTML(data, complaintId) {
+            return `
+                <div class="text-center">
+                    <h1 class="text-4xl font-bold mb-2">MISSING</h1>
+                    <div class="w-32 h-32 bg-white rounded-lg mx-auto mb-4 poster-photo flex items-center justify-center overflow-hidden">
+                        ${data.photo ? 
+                            `<img src="${data.photo}" alt="${data.name}" class="w-full h-full object-cover">` : 
+                            `<div class="text-6xl text-gray-400">👤</div>`
+                        }
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">${data.name}</h2>
+                    <div class="text-lg mb-4">
+                        <p><strong>Age:</strong> ${data.age} years</p>
+                        <p><strong>Gender:</strong> ${data.gender}</p>
+                        ${data.height ? `<p><strong>Height:</strong> ${data.height}</p>` : ''}
+                    </div>
+                    <div class="text-sm mb-4 bg-white bg-opacity-20 rounded-lg p-3">
+                        <p><strong>Last Seen:</strong></p>
+                        <p>${data.lastSeenLocation}</p>
+                        <p>${new Date(data.lastSeenDate).toLocaleDateString()}${data.lastSeenTime ? ` at ${data.lastSeenTime}` : ''}</p>
+                    </div>
+                    <div class="text-sm mb-4 bg-white bg-opacity-20 rounded-lg p-3">
+                        <p><strong>Description:</strong></p>
+                        <p>${data.physicalDescription}</p>
+                    </div>
+                    ${data.additionalInfo ? `
+                        <div class="text-sm mb-4 bg-white bg-opacity-20 rounded-lg p-3">
+                            <p><strong>Additional Info:</strong></p>
+                            <p>${data.additionalInfo}</p>
+                        </div>
+                    ` : ''}
+                    <div class="text-lg font-bold mb-2">
+                        <p>If you have any information, please contact:</p>
+                        <p class="text-xl">${data.contactPerson}</p>
+                        <p class="text-xl">${data.contactNumber}</p>
+                    </div>
+                    <div class="text-xs mt-4 bg-white bg-opacity-20 rounded p-2">
+                        <p>Report ID: ${complaintId}</p>
+                        <p>Generated: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate missing person poster
+        function generateMissingPersonPoster(data, complaintId) {
+            const posterContent = document.getElementById('posterContent');
+            posterContent.innerHTML = generatePosterHTML(data, complaintId);
+            document.getElementById('missingPersonPoster').classList.remove('hidden');
+        }
+
+        // Poster actions
+        document.getElementById('closePosterModal').addEventListener('click', function() {
+            document.getElementById('missingPersonPoster').classList.add('hidden');
+        });
+
+        // Close poster modal from bottom button
+        document.getElementById('closePosterModalBottom').addEventListener('click', function() {
+            document.getElementById('missingPersonPoster').classList.add('hidden');
+        });
+
+        // Close poster modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const posterModal = document.getElementById('missingPersonPoster');
+                if (!posterModal.classList.contains('hidden')) {
+                    posterModal.classList.add('hidden');
+                }
+            }
+        });
+
+        // Close poster modal when clicking outside
+        document.getElementById('missingPersonPoster').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('downloadPoster').addEventListener('click', function() {
+            // Create a downloadable version
+            const posterContent = document.getElementById('posterContent').innerHTML;
+            const blob = new Blob([`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Missing Person Poster</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                        .poster-container { 
+                            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+                            border: 4px solid #c44569;
+                            border-radius: 10px;
+                            padding: 30px;
+                            color: white;
+                            text-align: center;
+                            max-width: 400px;
+                            margin: 0 auto;
+                        }
+                        .poster-photo { 
+                            border: 3px solid white;
+                            border-radius: 10px;
+                            width: 128px;
+                            height: 128px;
+                            margin: 0 auto 20px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: white;
+                            color: #ccc;
+                            font-size: 60px;
+                            overflow: hidden;
+                        }
+                        .poster-photo img {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="poster-container">${posterContent}</div>
+                </body>
+                </html>
+            `], { type: 'text/html' });
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'missing-person-poster.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('Poster downloaded successfully!', 'success');
+        });
+
+        document.getElementById('printPoster').addEventListener('click', function() {
+            window.print();
+        });
+
+        document.getElementById('sharePoster').addEventListener('click', function() {
+            showSocialMediaModal();
+        });
+
+        // Social media sharing modal and functions
+        function showSocialMediaModal() {
+            const posterData = getCurrentPosterData();
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+                    <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-t-xl">
+                        <h3 class="text-xl font-bold flex items-center">
+                            <span class="mr-2">📱</span>
+                            Share Missing Person Alert
+                        </h3>
+                        <p class="text-purple-100 text-sm mt-1">Help spread the word and find ${posterData.name}</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-4">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p class="text-sm text-blue-800 font-medium mb-2">🚨 URGENT: Missing Person Alert</p>
+                            <p class="text-xs text-blue-600">This will automatically share the missing person details across multiple platforms</p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <h4 class="font-medium text-gray-800">Choose sharing platforms:</h4>
+                            
+                            <button onclick="shareToFacebook('${posterData.id}')" class="w-full flex items-center justify-between p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xl">📘</span>
+                                    <div class="text-left">
+                                        <p class="font-medium">Facebook</p>
+                                        <p class="text-xs text-blue-100">Share to timeline & groups</p>
+                                    </div>
+                                </div>
+                                <span class="text-blue-200">→</span>
+                            </button>
+                            
+                            <button onclick="shareToTwitter('${posterData.id}')" class="w-full flex items-center justify-between p-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xl">🐦</span>
+                                    <div class="text-left">
+                                        <p class="font-medium">Twitter/X</p>
+                                        <p class="text-xs text-sky-100">Tweet with hashtags</p>
+                                    </div>
+                                </div>
+                                <span class="text-sky-200">→</span>
+                            </button>
+                            
+                            <button onclick="shareToWhatsApp('${posterData.id}')" class="w-full flex items-center justify-between p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xl">💬</span>
+                                    <div class="text-left">
+                                        <p class="font-medium">WhatsApp</p>
+                                        <p class="text-xs text-green-100">Send to contacts & groups</p>
+                                    </div>
+                                </div>
+                                <span class="text-green-200">→</span>
+                            </button>
+                            
+                            <button onclick="shareToInstagram('${posterData.id}')" class="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xl">📷</span>
+                                    <div class="text-left">
+                                        <p class="font-medium">Instagram</p>
+                                        <p class="text-xs text-purple-100">Share as story & post</p>
+                                    </div>
+                                </div>
+                                <span class="text-purple-200">→</span>
+                            </button>
+                            
+                            <button onclick="shareToTelegram('${posterData.id}')" class="w-full flex items-center justify-between p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xl">✈️</span>
+                                    <div class="text-left">
+                                        <p class="font-medium">Telegram</p>
+                                        <p class="text-xs text-blue-100">Send to channels & groups</p>
+                                    </div>
+                                </div>
+                                <span class="text-blue-200">→</span>
+                            </button>
+                            
+                            <button onclick="shareViaEmail('${posterData.id}')" class="w-full flex items-center justify-between p-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xl">📧</span>
+                                    <div class="text-left">
+                                        <p class="font-medium">Email</p>
+                                        <p class="text-xs text-gray-100">Send to contacts</p>
+                                    </div>
+                                </div>
+                                <span class="text-gray-200">→</span>
+                            </button>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <button onclick="shareToAllPlatforms('${posterData.id}')" class="w-full p-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 transition-colors font-medium">
+                                🚨 URGENT: Share to ALL Platforms
+                            </button>
+                            <p class="text-xs text-gray-500 text-center mt-2">This will open all sharing options at once</p>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button onclick="copyPosterLink('${posterData.id}')" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                                📋 Copy Link
+                            </button>
+                            <button onclick="closeSocialModal()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.id = 'socialMediaModal';
+        }
+
+        function getCurrentPosterData() {
+            // Get current poster data from the modal or form
+            const posterContent = document.getElementById('posterContent');
+            if (posterContent && posterContent.innerHTML) {
+                // Extract data from current poster
+                const nameElement = posterContent.querySelector('h2');
+                const name = nameElement ? nameElement.textContent : 'Unknown Person';
+                const idElement = posterContent.querySelector('.text-xs p');
+                const id = idElement ? idElement.textContent.replace('Report ID: ', '') : 'Unknown';
+                
+                return { name, id };
+            }
+            return { name: 'Missing Person', id: 'Unknown' };
+        }
+
+        // Individual platform sharing functions
+        window.shareToFacebook = function(posterId) {
+            const complaint = complaints.find(c => c.id === posterId);
+            if (!complaint || !complaint.missingPersonData) return;
+            
+            const data = complaint.missingPersonData;
+            const shareText = `🚨 MISSING PERSON ALERT 🚨\n\nName: ${data.name}\nAge: ${data.age} years\nGender: ${data.gender}\nLast Seen: ${data.lastSeenLocation} on ${data.lastSeenDate}\n\nDescription: ${data.physicalDescription}\n\nIf you have any information, please contact: ${data.contactPerson} at ${data.contactNumber}\n\nReport ID: ${posterId}\n\n#MissingPerson #Help #PleaseShare`;
+            
+            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
+            window.open(facebookUrl, '_blank', 'width=600,height=400');
+            
+            showNotification('Opening Facebook sharing...', 'success');
+        }
+
+        window.shareToTwitter = function(posterId) {
+            const complaint = complaints.find(c => c.id === posterId);
+            if (!complaint || !complaint.missingPersonData) return;
+            
+            const data = complaint.missingPersonData;
+            const shareText = `🚨 MISSING: ${data.name}, ${data.age}yo ${data.gender}\nLast seen: ${data.lastSeenLocation}\nContact: ${data.contactNumber}\n\n#MissingPerson #Help #PleaseRT #${data.lastSeenLocation.replace(/\s+/g, '')}`;
+            
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(window.location.href)}`;
+            window.open(twitterUrl, '_blank', 'width=600,height=400');
+            
+            showNotification('Opening Twitter sharing...', 'success');
+        }
+
+        window.shareToWhatsApp = function(posterId) {
+            const complaint = complaints.find(c => c.id === posterId);
+            if (!complaint || !complaint.missingPersonData) return;
+            
+            const data = complaint.missingPersonData;
+            const shareText = `🚨 *MISSING PERSON ALERT* 🚨\n\n*Name:* ${data.name}\n*Age:* ${data.age} years\n*Gender:* ${data.gender}\n*Last Seen:* ${data.lastSeenLocation}\n*Date:* ${data.lastSeenDate}\n\n*Description:* ${data.physicalDescription}\n\n*Contact:* ${data.contactPerson}\n*Phone:* ${data.contactNumber}\n\n*Report ID:* ${posterId}\n\nPlease share this message to help find ${data.name}! 🙏`;
+            
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            showNotification('Opening WhatsApp sharing...', 'success');
+        }
+
+        window.shareToInstagram = function(posterId) {
+            const complaint = complaints.find(c => c.id === posterId);
+            if (!complaint || !complaint.missingPersonData) return;
+            
+            // Instagram doesn't support direct text sharing, so we'll copy text and guide user
+            const data = complaint.missingPersonData;
+            const shareText = `🚨 MISSING PERSON ALERT 🚨\n\n${data.name}, ${data.age} years old\nLast seen: ${data.lastSeenLocation}\nContact: ${data.contactNumber}\n\n#MissingPerson #Help #PleaseShare #${data.lastSeenLocation.replace(/\s+/g, '')}`;
+            
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('Text copied to clipboard!\n\nInstagram Instructions:\n1. Open Instagram\n2. Create a new story or post\n3. Add the missing person photo\n4. Paste the copied text as caption\n5. Add hashtags and share');
+                
+                // Try to open Instagram web
+                window.open('https://www.instagram.com/', '_blank');
+            });
+            
+            showNotification('Text copied! Follow Instagram instructions.', 'success');
+        }
+
+        window.shareToTelegram = function(posterId) {
+            const complaint = complaints.find(c => c.id === posterId);
+            if (!complaint || !complaint.missingPersonData) return;
+            
+            const data = complaint.missingPersonData;
+            const shareText = `🚨 *MISSING PERSON ALERT* 🚨\n\n*Name:* ${data.name}\n*Age:* ${data.age} years\n*Gender:* ${data.gender}\n*Last Seen:* ${data.lastSeenLocation}\n*Date:* ${data.lastSeenDate}\n\n*Description:* ${data.physicalDescription}\n\n*Contact:* ${data.contactPerson}\n*Phone:* ${data.contactNumber}\n\n*Report ID:* ${posterId}\n\nPlease forward this message to help find ${data.name}! 🙏`;
+            
+            const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`;
+            window.open(telegramUrl, '_blank');
+            
+            showNotification('Opening Telegram sharing...', 'success');
+        }
+
+        window.shareViaEmail = function(posterId) {
+            const complaint = complaints.find(c => c.id === posterId);
+            if (!complaint || !complaint.missingPersonData) return;
+            
+            const data = complaint.missingPersonData;
+            const subject = `URGENT: Missing Person Alert - ${data.name}`;
+            const body = `MISSING PERSON ALERT\n\nDear Friend,\n\nWe urgently need your help to find a missing person:\n\nName: ${data.name}\nAge: ${data.age} years\nGender: ${data.gender}\nLast Seen Location: ${data.lastSeenLocation}\nLast Seen Date: ${data.lastSeenDate}\n\nPhysical Description:\n${data.physicalDescription}\n\n${data.additionalInfo ? `Additional Information:\n${data.additionalInfo}\n\n` : ''}Contact Information:\nPerson to Contact: ${data.contactPerson}\nPhone Number: ${data.contactNumber}\n\nReport ID: ${posterId}\nGenerated: ${new Date().toLocaleDateString()}\n\nPlease share this information with your contacts and on social media to help us find ${data.name}.\n\nThank you for your help.\n\nBest regards,\nCivic Issue Reporter System`;
+            
+            const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = emailUrl;
+            
+            showNotification('Opening email client...', 'success');
+        }
+
+        window.shareToAllPlatforms = function(posterId) {
+            // Open all sharing platforms with a small delay between each
+            const platforms = [
+                () => shareToFacebook(posterId),
+                () => shareToTwitter(posterId),
+                () => shareToWhatsApp(posterId),
+                () => shareToTelegram(posterId),
+                () => shareViaEmail(posterId)
+            ];
+            
+            platforms.forEach((shareFunction, index) => {
+                setTimeout(shareFunction, index * 1000); // 1 second delay between each
+            });
+            
+            // Also copy text for Instagram
+            setTimeout(() => shareToInstagram(posterId), platforms.length * 1000);
+            
+            showNotification('Opening all sharing platforms...', 'success');
+        }
+
+        window.copyPosterLink = function(posterId) {
+            const complaint = complaints.find(c => c.id === posterId);
+            if (!complaint || !complaint.missingPersonData) return;
+            
+            const data = complaint.missingPersonData;
+            const shareText = `🚨 MISSING PERSON ALERT 🚨\n\nName: ${data.name}\nAge: ${data.age} years\nGender: ${data.gender}\nLast Seen: ${data.lastSeenLocation} on ${data.lastSeenDate}\n\nDescription: ${data.physicalDescription}\n\nContact: ${data.contactPerson} - ${data.contactNumber}\n\nReport ID: ${posterId}\n\nPlease share this information to help find ${data.name}!`;
+            
+            navigator.clipboard.writeText(shareText).then(() => {
+                showNotification('Missing person details copied to clipboard!', 'success');
+            });
+        }
+
+        window.closeSocialModal = function() {
+            const modal = document.getElementById('socialMediaModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Form submission
+        document.getElementById('complaintForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('citizenName').value;
+            const phone = document.getElementById('citizenPhone').value;
+            const location = document.getElementById('issueLocation').value;
+            const description = document.getElementById('issueDescription').value;
+            const detectionResult = smartDetectDepartment(description);
+            
+            const complaint = {
+                id: 'CMP' + Date.now(),
+                name,
+                phone,
+                location,
+                description,
+                category: detectionResult.department,
+                confidence: detectionResult.confidence,
+                aiReasoning: detectionResult.reasoning,
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                status: detectionResult.department === 'Missing Person' ? 'Urgent' : 'Pending'
+            };
+            
+            complaints.push(complaint);
+            localStorage.setItem('civicComplaints', JSON.stringify(complaints));
+            
+            document.getElementById('complaintId').textContent = complaint.id;
+            document.getElementById('successMessage').classList.remove('hidden');
+            
+            this.reset();
+            document.getElementById('detectedCategory').classList.add('hidden');
+            document.getElementById('missingPersonAlert').classList.add('hidden');
+        });
+
+        // Copy complaint ID functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'copyIdBtn') {
+                const complaintId = document.getElementById('complaintId').textContent;
+                navigator.clipboard.writeText(complaintId).then(() => {
+                    const btn = e.target;
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '✅ Copied!';
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    btn.classList.add('bg-green-600');
+                    
+                    setTimeout(() => {
+                        document.getElementById('successMessage').classList.add('hidden');
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = complaintId;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    const btn = e.target;
+                    btn.innerHTML = '✅ Copied!';
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    btn.classList.add('bg-green-600');
+                    
+                    setTimeout(() => {
+                        document.getElementById('successMessage').classList.add('hidden');
+                    }, 2000);
+                });
+            }
+        });
+
+        // Dashboard functionality
+        function updateDashboard() {
+            updateStats();
+            displayComplaints(currentFilter);
+        }
+
+        function updateStats() {
+            const total = complaints.length;
+            const municipal = complaints.filter(c => c.category === 'Municipal').length;
+            const publicWorks = complaints.filter(c => c.category === 'Public Works').length;
+            const health = complaints.filter(c => c.category === 'Health & Safety').length;
+            const transportation = complaints.filter(c => c.category === 'Transportation').length;
+            const environment = complaints.filter(c => c.category === 'Environment').length;
+            const utilities = complaints.filter(c => c.category === 'Utilities').length;
+            const education = complaints.filter(c => c.category === 'Education').length;
+            const housing = complaints.filter(c => c.category === 'Housing').length;
+            const social = complaints.filter(c => c.category === 'Social Services').length;
+            const missingPerson = complaints.filter(c => c.category === 'Missing Person').length;
+            
+            document.getElementById('totalComplaints').textContent = total;
+            document.getElementById('municipalCount').textContent = municipal;
+            document.getElementById('publicWorksCount').textContent = publicWorks;
+            document.getElementById('healthCount').textContent = health;
+            document.getElementById('transportationCount').textContent = transportation;
+            document.getElementById('environmentCount').textContent = environment;
+            document.getElementById('utilitiesCount').textContent = utilities;
+            document.getElementById('educationCount').textContent = education;
+            document.getElementById('housingCount').textContent = housing;
+            document.getElementById('socialCount').textContent = social;
+            document.getElementById('missingPersonCount').textContent = missingPerson;
+        }
+
+        function displayComplaints(filter) {
+            const container = document.getElementById('complaintsContainer');
+            let filteredComplaints = filter === 'all' ? complaints : complaints.filter(c => c.category === filter);
+            
+            if (filteredComplaints.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <span class="text-4xl mb-4 block">📋</span>
+                        <p class="text-lg">No complaints found for ${filter === 'all' ? 'any department' : filter}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredComplaints.map(complaint => `
+                <div class="border border-gray-200 rounded-lg p-6 mb-4 hover:shadow-md transition-shadow ${complaint.category === 'Missing Person' ? 'border-red-300 bg-red-50' : ''}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">${complaint.id}</h3>
+                            <p class="text-sm text-gray-600">${complaint.date} at ${complaint.time}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-3 py-1 ${complaint.category === 'Missing Person' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'} rounded-full text-sm font-medium">${complaint.category}</span>
+                            ${complaint.assignedOfficer ? `<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">👮 ${complaint.assignedOfficer}</span>` : ''}
+                            <span class="px-3 py-1 ${complaint.status === 'Resolved' ? 'bg-green-100 text-green-800' : complaint.status === 'In Progress' ? 'bg-blue-100 text-blue-800' : complaint.status === 'Urgent' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'} rounded-full text-sm font-medium ${complaint.status === 'Pending' || complaint.status === 'Urgent' ? 'pulse-dot' : ''}">${complaint.status}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Citizen</p>
+                            <p class="text-gray-800">${complaint.name}</p>
+                            <p class="text-gray-600 text-sm">${complaint.phone}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Location</p>
+                            <p class="text-gray-800">${complaint.location}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm font-medium text-gray-600 mb-2">Issue Description</p>
+                        <p class="text-gray-800 bg-gray-50 p-3 rounded-lg">${complaint.description}</p>
+                        ${complaint.missingPersonData ? `
+                            <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p class="text-sm font-medium text-red-800 mb-2">🚨 Missing Person Details:</p>
+                                <div class="flex gap-3">
+                                    ${complaint.missingPersonData.photo ? `
+                                        <div class="w-16 h-16 bg-white rounded-lg border-2 border-red-300 overflow-hidden flex-shrink-0">
+                                            <img src="${complaint.missingPersonData.photo}" alt="${complaint.missingPersonData.name}" class="w-full h-full object-cover">
+                                        </div>
+                                    ` : `
+                                        <div class="w-16 h-16 bg-white rounded-lg border-2 border-red-300 flex items-center justify-center flex-shrink-0">
+                                            <span class="text-2xl text-gray-400">👤</span>
+                                        </div>
+                                    `}
+                                    <div class="text-xs text-red-700 grid grid-cols-2 gap-2 flex-1">
+                                        <p><strong>Name:</strong> ${complaint.missingPersonData.name}</p>
+                                        <p><strong>Age:</strong> ${complaint.missingPersonData.age}</p>
+                                        <p><strong>Gender:</strong> ${complaint.missingPersonData.gender}</p>
+                                        <p><strong>Last Seen:</strong> ${complaint.missingPersonData.lastSeenDate}</p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-xs text-red-600">
+                                    <p><strong>📋 Poster Status:</strong> Generated and available for download</p>
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${complaint.assignedOfficer ? `
+                            <div class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                                <p class="text-sm font-medium text-purple-800">👮 Assigned Officer: ${complaint.assignedOfficer}</p>
+                                <p class="text-xs text-purple-600">Assigned on: ${complaint.assignedDate}</p>
+                            </div>
+                        ` : ''}
+                        ${complaint.status === 'Resolved' ? `
+                            <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p class="text-sm font-medium text-green-800">✅ Resolved on: ${complaint.resolvedDate} at ${complaint.resolvedTime}</p>
+                            </div>
+                        ` : ''}
+                        ${complaint.communications && complaint.communications.length > 0 ? `
+                            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p class="text-sm font-medium text-blue-800 mb-2">📞 Recent Communication:</p>
+                                <p class="text-xs text-blue-600">${complaint.communications[complaint.communications.length - 1].message}</p>
+                                <p class="text-xs text-blue-500 mt-1">${complaint.communications[complaint.communications.length - 1].date} at ${complaint.communications[complaint.communications.length - 1].time}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="markResolved('${complaint.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                            Mark Resolved
+                        </button>
+                        <button onclick="assignOfficer('${complaint.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                            Assign Officer
+                        </button>
+                        <button onclick="contactCitizen('${complaint.id}')" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium">
+                            Contact Citizen
+                        </button>
+                        ${complaint.missingPersonData ? `
+                            <button onclick="viewPoster('${complaint.id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
+                                📋 View Poster
+                            </button>
+                            <button onclick="downloadPosterFromDashboard('${complaint.id}')" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium">
+                                📥 Download Poster
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // View poster from government dashboard
+        window.viewPoster = function(complaintId) {
+            const complaint = complaints.find(c => c.id === complaintId);
+            if (complaint && complaint.posterHTML) {
+                const posterContent = document.getElementById('posterContent');
+                posterContent.innerHTML = complaint.posterHTML;
+                document.getElementById('missingPersonPoster').classList.remove('hidden');
+            } else if (complaint && complaint.missingPersonData) {
+                // Fallback: generate poster if HTML not stored
+                generateMissingPersonPoster(complaint.missingPersonData, complaintId);
+            }
+        }
+
+        // Download poster from government dashboard
+        window.downloadPosterFromDashboard = function(complaintId) {
+            const complaint = complaints.find(c => c.id === complaintId);
+            if (complaint && (complaint.posterHTML || complaint.missingPersonData)) {
+                const posterHTML = complaint.posterHTML || generatePosterHTML(complaint.missingPersonData, complaintId);
+                
+                // Create downloadable HTML file
+                const fullHTML = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Missing Person Poster - ${complaint.missingPersonData.name}</title>
+                        <style>
+                            body { 
+                                font-family: Arial, sans-serif; 
+                                margin: 0; 
+                                padding: 20px; 
+                                background: #f5f5f5;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                min-height: 100vh;
+                            }
+                            .poster-container { 
+                                background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+                                border: 4px solid #c44569;
+                                border-radius: 15px;
+                                padding: 30px;
+                                color: white;
+                                text-align: center;
+                                max-width: 400px;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                            }
+                            .poster-photo { 
+                                border: 3px solid white;
+                                border-radius: 10px;
+                                width: 128px;
+                                height: 128px;
+                                margin: 0 auto 20px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                background: white;
+                                color: #ccc;
+                                font-size: 60px;
+                                overflow: hidden;
+                                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                            }
+                            .poster-photo img {
+                                width: 100%;
+                                height: 100%;
+                                object-fit: cover;
+                            }
+                            h1 { font-size: 2.5rem; margin-bottom: 10px; }
+                            h2 { font-size: 1.5rem; margin-bottom: 10px; }
+                            .bg-white { background: rgba(255,255,255,0.2); }
+                            .rounded-lg { border-radius: 8px; }
+                            .p-3 { padding: 12px; }
+                            .mb-4 { margin-bottom: 16px; }
+                            .mb-2 { margin-bottom: 8px; }
+                            .text-lg { font-size: 1.125rem; }
+                            .text-xl { font-size: 1.25rem; }
+                            .text-sm { font-size: 0.875rem; }
+                            .text-xs { font-size: 0.75rem; }
+                            .font-bold { font-weight: bold; }
+                            @media print {
+                                body { background: white; padding: 0; }
+                                .poster-container { box-shadow: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="poster-container">
+                            ${posterHTML}
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                // Create and download file
+                const blob = new Blob([fullHTML], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `missing-person-poster-${complaint.missingPersonData.name.replace(/\s+/g, '-')}-${complaintId}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification(`Poster for ${complaint.missingPersonData.name} downloaded successfully!`, 'success');
+            }
+        }
+
+        // Department tab switching
+        document.querySelectorAll('.dept-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.dept-tab').forEach(t => {
+                    t.classList.remove('border-blue-500', 'text-blue-600');
+                    t.classList.add('border-transparent', 'text-gray-500');
+                });
+                
+                this.classList.remove('border-transparent', 'text-gray-500');
+                this.classList.add('border-blue-500', 'text-blue-600');
+                
+                currentFilter = this.dataset.dept;
+                displayComplaints(currentFilter);
+            });
+        });
+
+        // Status checker functionality
+        document.getElementById('checkStatusBtn').addEventListener('click', function() {
+            const complaintId = document.getElementById('statusCheckId').value.trim();
+            const statusResult = document.getElementById('statusResult');
+            
+            if (!complaintId) {
+                statusResult.innerHTML = `
+                    <div class="flex items-center space-x-2 text-red-600">
+                        <span>❌</span>
+                        <span class="font-medium">Please enter a complaint ID</span>
+                    </div>
+                `;
+                statusResult.classList.remove('hidden');
+                return;
+            }
+            
+            const complaint = complaints.find(c => c.id === complaintId);
+            
+            if (!complaint) {
+                statusResult.innerHTML = `
+                    <div class="flex items-center space-x-2 text-red-600">
+                        <span>❌</span>
+                        <span class="font-medium">Complaint ID not found</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">Please check your complaint ID and try again.</p>
+                `;
+                statusResult.classList.remove('hidden');
+                return;
+            }
+            
+            // Display complaint details
+            statusResult.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-lg text-gray-800">Complaint Details</h4>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-3 py-1 ${complaint.category === 'Missing Person' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'} rounded-full text-sm font-medium">${complaint.category}</span>
+                            ${complaint.assignedOfficer ? `<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">👮 ${complaint.assignedOfficer}</span>` : ''}
+                            <span class="px-3 py-1 ${complaint.status === 'Resolved' ? 'bg-green-100 text-green-800' : complaint.status === 'In Progress' ? 'bg-blue-100 text-blue-800' : complaint.status === 'Urgent' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'} rounded-full text-sm font-medium ${complaint.status === 'Pending' || complaint.status === 'Urgent' ? 'pulse-dot' : ''}">${complaint.status}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Complaint ID</p>
+                            <p class="text-gray-800 font-mono">${complaint.id}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Submitted On</p>
+                            <p class="text-gray-800">${complaint.date} at ${complaint.time}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Location</p>
+                            <p class="text-gray-800">${complaint.location}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Department</p>
+                            <p class="text-gray-800">${complaint.category}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 mb-2">Issue Description</p>
+                        <p class="text-gray-800 bg-gray-50 p-3 rounded-lg">${complaint.description}</p>
+                        ${complaint.missingPersonData ? `
+                            <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p class="text-sm font-medium text-red-800 mb-2">🚨 Missing Person Details:</p>
+                                <div class="text-sm text-red-700">
+                                    <p><strong>Name:</strong> ${complaint.missingPersonData.name}</p>
+                                    <p><strong>Age:</strong> ${complaint.missingPersonData.age} years, ${complaint.missingPersonData.gender}</p>
+                                    <p><strong>Last Seen:</strong> ${complaint.missingPersonData.lastSeenLocation} on ${complaint.missingPersonData.lastSeenDate}</p>
+                                    <p><strong>Contact:</strong> ${complaint.missingPersonData.contactPerson} - ${complaint.missingPersonData.contactNumber}</p>
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${complaint.assignedOfficer ? `
+                            <div class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                                <p class="text-sm font-medium text-purple-800">👮 Assigned Officer: ${complaint.assignedOfficer}</p>
+                                <p class="text-xs text-purple-600">Assigned on: ${complaint.assignedDate}</p>
+                            </div>
+                        ` : ''}
+                        ${complaint.communications && complaint.communications.length > 0 ? `
+                            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p class="text-sm font-medium text-blue-800 mb-2">📞 Latest Update:</p>
+                                <p class="text-sm text-blue-700">${complaint.communications[complaint.communications.length - 1].message}</p>
+                                <p class="text-xs text-blue-500 mt-1">${complaint.communications[complaint.communications.length - 1].date} at ${complaint.communications[complaint.communications.length - 1].time}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="${complaint.status === 'Resolved' ? 'bg-green-50 border-green-200' : complaint.status === 'In Progress' ? 'bg-blue-50 border-blue-200' : complaint.status === 'Urgent' ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="${complaint.status === 'Resolved' ? 'text-green-600' : complaint.status === 'In Progress' ? 'text-blue-600' : complaint.status === 'Urgent' ? 'text-red-600' : 'text-yellow-600'}">${complaint.status === 'Resolved' ? '✅' : complaint.status === 'In Progress' ? '🔄' : complaint.status === 'Urgent' ? '🚨' : '⏳'}</span>
+                            <span class="font-medium ${complaint.status === 'Resolved' ? 'text-green-800' : complaint.status === 'In Progress' ? 'text-blue-800' : complaint.status === 'Urgent' ? 'text-red-800' : 'text-yellow-800'}">Current Status: ${complaint.status}</span>
+                        </div>
+                        <p class="${complaint.status === 'Resolved' ? 'text-green-700' : complaint.status === 'In Progress' ? 'text-blue-700' : complaint.status === 'Urgent' ? 'text-red-700' : 'text-yellow-700'} text-sm mt-1">
+                            ${complaint.status === 'Resolved' ? `Your complaint has been successfully resolved on ${complaint.resolvedDate}.` : 
+                              complaint.status === 'In Progress' ? `Your complaint is currently being worked on by the ${complaint.category} department.` :
+                              complaint.status === 'Urgent' ? `Your ${complaint.category === 'Missing Person' ? 'missing person report' : 'urgent complaint'} is being prioritized by the ${complaint.category} department.` :
+                              `Your complaint has been received and is being processed by the ${complaint.category} department.`}
+                        </p>
+                    </div>
+                </div>
+            `;
+            statusResult.classList.remove('hidden');
+        });
+
+        // Allow Enter key to check status
+        document.getElementById('statusCheckId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('checkStatusBtn').click();
+            }
+        });
+
+        // Government action functions - Made global
+        window.markResolved = function(complaintId) {
+            const complaint = complaints.find(c => c.id === complaintId);
+            if (complaint) {
+                complaint.status = 'Resolved';
+                complaint.resolvedDate = new Date().toLocaleDateString();
+                complaint.resolvedTime = new Date().toLocaleTimeString();
+                localStorage.setItem('civicComplaints', JSON.stringify(complaints));
+                updateDashboard();
+                
+                // Show success notification
+                showNotification(`Complaint ${complaintId} marked as resolved!`, 'success');
+            }
+        }
+        
+        window.assignOfficer = function(complaintId) {
+            const officerName = prompt('Enter officer name to assign:');
+            if (officerName && officerName.trim()) {
+                const complaint = complaints.find(c => c.id === complaintId);
+                if (complaint) {
+                    complaint.assignedOfficer = officerName.trim();
+                    complaint.status = complaint.status === 'Urgent' ? 'Urgent' : 'In Progress';
+                    complaint.assignedDate = new Date().toLocaleDateString();
+                    localStorage.setItem('civicComplaints', JSON.stringify(complaints));
+                    updateDashboard();
+                    
+                    showNotification(`Officer ${officerName} assigned to complaint ${complaintId}`, 'success');
+                }
+            }
+        }
+        
+        window.contactCitizen = function(complaintId) {
+            const complaint = complaints.find(c => c.id === complaintId);
+            if (complaint) {
+                const message = prompt(`Contact ${complaint.name} (${complaint.phone})\n\nEnter your message:`);
+                if (message && message.trim()) {
+                    // Add communication log
+                    if (!complaint.communications) {
+                        complaint.communications = [];
+                    }
+                    complaint.communications.push({
+                        date: new Date().toLocaleDateString(),
+                        time: new Date().toLocaleTimeString(),
+                        message: message.trim(),
+                        type: 'outgoing'
+                    });
+                    localStorage.setItem('civicComplaints', JSON.stringify(complaints));
+                    updateDashboard();
+                    
+                    showNotification(`Message sent to ${complaint.name}`, 'success');
+                }
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Login functionality
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('username').focus();
+        }
+        
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').classList.add('hidden');
+        }
+        
+        // Login form submission - FIXED VERSION
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            console.log('Login attempt:', { username, password }); // Debug log
+            
+            // Simple authentication (in real app, this would be server-side)
+            if (username.toLowerCase() === 'admin' && password === 'gov123') {
+                hideLoginModal();
+                document.getElementById('citizenPortal').classList.add('hidden');
+                document.getElementById('govDashboard').classList.remove('hidden');
+                updateDashboard();
+                showNotification('Login successful! Welcome to Government Dashboard', 'success');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+                console.log('Login failed - Invalid credentials'); // Debug log
+            }
+        });
+        
+        // Cancel login
+        document.getElementById('cancelLogin').addEventListener('click', hideLoginModal);
+        
+        // Close modal when clicking outside
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideLoginModal();
+            }
+        });
+        
+        // Allow Enter key in login form
+        document.getElementById('loginModal').addEventListener('keypress', function(e) {
+            if (e.key === 'Escape') {
+                hideLoginModal();
+            }
+        });
+
+        // Initialize dashboard if complaints exist
+        if (complaints.length > 0) {
+            updateDashboard();
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9872928790d69361',t:'MTc1OTIyMzI3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

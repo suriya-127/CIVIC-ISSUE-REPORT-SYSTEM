@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Complaint System</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .check-status-btn {
+            background: #38a169;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .check-status-btn:hover {
+            background: #2f855a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+        }
+
+        .auth-login-btn {
+            background: #4299e1;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .auth-login-btn:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .complaint-form {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            text-align: center;
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .required {
+            color: #e53e3e;
+        }
+
+        /* Status Checker Modal Styles */
+        .status-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status-modal.active {
+            display: flex;
+        }
+
+        .status-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        .status-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .status-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .status-search-btn {
+            background: #38a169;
+            color: white;
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .status-search-btn:hover {
+            background: #2f855a;
+        }
+
+        .status-result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status-result.success {
+            background: #f0fff4;
+            border: 2px solid #c6f6d5;
+        }
+
+        .status-result.error {
+            background: #fff5f5;
+            border: 2px solid #fed7d7;
+        }
+
+        .status-complaint-id {
+            font-weight: bold;
+            color: #4299e1;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .status-pending {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .status-progress {
+            background: #feebc8;
+            color: #dd6b20;
+        }
+
+        .status-resolved {
+            background: #c6f6d5;
+            color: #38a169;
+        }
+
+        .status-details {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .status-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .status-detail-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .status-detail-value {
+            color: #2d3748;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.5rem;
+            }
+
+            .check-status-btn,
+            .auth-login-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .container {
+                margin: 1rem auto;
+            }
+
+            .complaint-form {
+                padding: 1.5rem;
+            }
+
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .status-modal-content {
+                margin: 1rem;
+                width: calc(100% - 2rem);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🏛️ Public Services Portal</div>
+        <div class="header-buttons">
+            <button class="check-status-btn" onclick="openStatusChecker()">📋 Check Complaint Status</button>
+            <a href="#" class="auth-login-btn" onclick="handleAuthorityLogin()">Authority Login</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <form class="complaint-form" onsubmit="handleComplaintSubmit(event)">
+            <h1 class="form-title">Submit a Complaint</h1>
+            <p class="form-subtitle">Help us improve our services by reporting issues in your area</p>
+
+            <div class="form-group">
+                <label class="form-label" for="complaintDescription">
+                    Complaint Description <span class="required">*</span>
+                </label>
+                <textarea 
+                    id="complaintDescription" 
+                    name="complaintDescription" 
+                    class="form-input form-textarea" 
+                    placeholder="Please provide detailed information about the issue, including location and any relevant details..."
+                    required
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="detectedDepartment">
+                    Detected Department
+                </label>
+                <div id="detectedDepartment" class="form-input" style="background: #f7fafc; color: #4a5568; font-weight: 600;">
+                    Will be detected automatically based on complaint description
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="issueLandmark">
+                    Issue Location <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="issueLandmark" 
+                    name="issueLandmark" 
+                    class="form-input" 
+                    placeholder="Enter the exact location of the issue (e.g., 123 Main Street, Downtown Plaza, Near City Park)"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="phoneNumber">
+                    Phone Number <span class="required">*</span>
+                </label>
+                <input 
+                    type="tel" 
+                    id="phoneNumber" 
+                    name="phoneNumber" 
+                    class="form-input" 
+                    placeholder="Your contact number"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="submit-btn">
+                📝 Submit Complaint
+            </button>
+        </form>
+    </div>
+
+    <!-- Status Checker Modal -->
+    <div class="status-modal" id="statusModal">
+        <div class="status-modal-content">
+            <div class="status-modal-header">
+                <h2 class="status-modal-title">Check Complaint Status</h2>
+                <button class="close-btn" onclick="closeStatusChecker()">&times;</button>
+            </div>
+            
+            <div class="status-input-group">
+                <label class="form-label" for="complaintIdInput">
+                    Enter Complaint ID <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="complaintIdInput" 
+                    class="form-input" 
+                    placeholder="e.g., C001, C002, C003..."
+                    onkeypress="handleStatusEnterKey(event)"
+                >
+            </div>
+            
+            <button class="status-search-btn" onclick="checkComplaintStatus()">
+                🔍 Check Status
+            </button>
+            
+            <div class="status-result" id="statusResult">
+                <!-- Status result will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Department detection keywords
+        const departmentKeywords = {
+            'Infrastructure': ['road', 'street', 'sidewalk', 'pavement', 'bridge', 'traffic', 'pothole', 'construction', 'pathway', 'crosswalk', 'streetlight', 'lamp', 'lighting'],
+            'Utilities': ['electricity', 'power', 'water', 'sewage', 'sewer', 'drain', 'electric', 'outage', 'supply', 'plumbing', 'pipe', 'leak', 'blackout'],
+            'Environment': ['waste', 'garbage', 'trash', 'pollution', 'noise', 'air', 'smell', 'recycling', 'litter', 'dumping', 'toxic', 'contamination'],
+            'Other': []
+        };
+
+        function detectDepartment(complaintName) {
+            const name = complaintName.toLowerCase();
+            
+            for (const [department, keywords] of Object.entries(departmentKeywords)) {
+                if (department === 'Other') continue;
+                
+                for (const keyword of keywords) {
+                    if (name.includes(keyword)) {
+                        return department;
+                    }
+                }
+            }
+            
+            return 'Other';
+        }
+
+        function updateDepartmentDisplay() {
+            const complaintDescription = document.getElementById('complaintDescription').value;
+            const departmentDisplay = document.getElementById('detectedDepartment');
+            
+            if (complaintDescription.trim()) {
+                const department = detectDepartment(complaintDescription);
+                const departmentInfo = {
+                    'Infrastructure': '🏗️ Infrastructure (Roads, streetlights, sidewalks)',
+                    'Utilities': '⚡ Utilities (Electricity, water supply, sewage)',
+                    'Environment': '🌱 Environment (Waste management, pollution)',
+                    'Other': '📋 Other (Uncategorized or new types)'
+                };
+                
+                departmentDisplay.textContent = departmentInfo[department];
+                departmentDisplay.style.background = department === 'Other' ? '#fff5f5' : '#f0fff4';
+                departmentDisplay.style.color = department === 'Other' ? '#c53030' : '#38a169';
+            } else {
+                departmentDisplay.textContent = 'Will be detected automatically based on complaint description';
+                departmentDisplay.style.background = '#f7fafc';
+                departmentDisplay.style.color = '#4a5568';
+            }
+        }
+
+        // Status Checker Functions
+        function openStatusChecker() {
+            document.getElementById('statusModal').classList.add('active');
+            document.getElementById('complaintIdInput').focus();
+            // Clear previous results
+            document.getElementById('statusResult').style.display = 'none';
+            document.getElementById('complaintIdInput').value = '';
+        }
+
+        function closeStatusChecker() {
+            document.getElementById('statusModal').classList.remove('active');
+        }
+
+        function handleStatusEnterKey(event) {
+            if (event.key === 'Enter') {
+                checkComplaintStatus();
+            }
+        }
+
+        function checkComplaintStatus() {
+            const complaintId = document.getElementById('complaintIdInput').value.trim().toUpperCase();
+            const statusResult = document.getElementById('statusResult');
+            
+            if (!complaintId) {
+                showStatusError('Please enter a complaint ID');
+                return;
+            }
+
+            // Load complaints from localStorage
+            const complaints = JSON.parse(localStorage.getItem('publicComplaints') || '[]');
+            const complaint = complaints.find(c => c.id.toUpperCase() === complaintId);
+
+            if (complaint) {
+                showStatusSuccess(complaint);
+            } else {
+                showStatusError(`Complaint ID "${complaintId}" not found. Please check the ID and try again.`);
+            }
+        }
+
+        function showStatusSuccess(complaint) {
+            const statusResult = document.getElementById('statusResult');
+            const statusText = {
+                'pending': 'Pending',
+                'progress': 'In Progress', 
+                'resolved': 'Resolved'
+            };
+
+            statusResult.className = 'status-result success';
+            statusResult.innerHTML = `
+                <div class="status-complaint-id">Complaint #${complaint.id}</div>
+                <div class="status-badge status-${complaint.status}">
+                    ${statusText[complaint.status]}
+                </div>
+                <div class="status-details">
+                    <div class="status-detail-item">
+                        <span class="status-detail-label">Description:</span>
+                        <span class="status-detail-value">${complaint.description.substring(0, 50)}${complaint.description.length > 50 ? '...' : ''}</span>
+                    </div>
+                    <div class="status-detail-item">
+                        <span class="status-detail-label">Location:</span>
+                        <span class="status-detail-value">${complaint.location}</span>
+                    </div>
+                    <div class="status-detail-item">
+                        <span class="status-detail-label">Department:</span>
+                        <span class="status-detail-value">${getDepartmentIcon(complaint.department)} ${complaint.department}</span>
+                    </div>
+                    <div class="status-detail-item">
+                        <span class="status-detail-label">Submitted:</span>
+                        <span class="status-detail-value">${complaint.timestamp}</span>
+                    </div>
+                    <div class="status-detail-item">
+                        <span class="status-detail-label">Contact:</span>
+                        <span class="status-detail-value">${complaint.phone}</span>
+                    </div>
+                </div>
+            `;
+            statusResult.style.display = 'block';
+        }
+
+        function showStatusError(message) {
+            const statusResult = document.getElementById('statusResult');
+            statusResult.className = 'status-result error';
+            statusResult.innerHTML = `
+                <div style="color: #c53030; font-weight: 600; text-align: center;">
+                    ❌ ${message}
+                </div>
+            `;
+            statusResult.style.display = 'block';
+        }
+
+        function getDepartmentIcon(department) {
+            const icons = {
+                'Infrastructure': '🏗️',
+                'Utilities': '⚡',
+                'Environment': '🌱',
+                'Other': '📋'
+            };
+            return icons[department] || '📋';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('statusModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeStatusChecker();
+            }
+        });
+
+        // Add event listener for real-time detection
+        document.addEventListener('DOMContentLoaded', function() {
+            const complaintDescriptionInput = document.getElementById('complaintDescription');
+            complaintDescriptionInput.addEventListener('input', updateDepartmentDisplay);
+        });
+
+        function handleComplaintSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const complaintDescription = formData.get('complaintDescription');
+            const department = detectDepartment(complaintDescription);
+            
+            // Generate unique complaint ID
+            const existingComplaints = JSON.parse(localStorage.getItem('publicComplaints') || '[]');
+            const complaintId = 'C' + String(existingComplaints.length + 1).padStart(3, '0');
+            
+            const complaintData = {
+                id: complaintId,
+                description: complaintDescription,
+                location: formData.get('issueLandmark'),
+                phone: formData.get('phoneNumber'),
+                department: department,
+                status: 'pending',
+                timestamp: new Date().toLocaleString()
+            };
+
+            // Save to localStorage (this connects to the dashboard)
+            existingComplaints.push(complaintData);
+            localStorage.setItem('publicComplaints', JSON.stringify(existingComplaints));
+
+            // Show success message
+            alert(`Thank you! Your complaint has been submitted successfully.\n\nLocation: ${complaintData.location}\nDepartment: ${complaintData.department}\nReference ID: #${complaintId}\n\nWe will contact you at ${complaintData.phone} for updates.\n\nYou can check your complaint status anytime using the "Check Complaint Status" button.`);
+            
+            // Reset form
+            event.target.reset();
+            updateDepartmentDisplay();
+        }
+
+        function handleAuthorityLogin() {
+            // In a real application, this would redirect to the dashboard
+            window.open('page.html', '_blank');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'987213e5a0889a95',t:'MTc1OTIxODA4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
